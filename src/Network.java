@@ -36,7 +36,7 @@ public class Network {
 		int layers = 4;
 		
 		//input data fields
-		double[][] tInputData = {{0,0,0},{2,1,2},{1,1,2}};
+		double[][] tInputData = {{1,0,2},{2,1,2},{1,1,2}};
 		double[][] tOutputData = {{1,0,0},{1,0.5,0},{1,0,1}};
 		
 		Matrix[] tError = new Matrix[tOutputData.length];
@@ -72,14 +72,14 @@ public class Network {
 		
 
 		n[0] = tInput[0];
-		n[0].addBias(0);
-		for(int i = 0; i < layers-2; i++) {
+		n[0].addBias(1);
+		for(int i = 0; i < layers-1; i++) {
 			n[i+1] = n[i].dot(w[i]);
 			
 			n[i+1].sigmoid();
-			n[i+1].addBias(0);
+			n[i+1].addBias(1);
 			n[i].printMatrix();
-			System.out.println("_______");
+			System.out.println("____"+i+"___");
 			w[i].printMatrix();
 			System.out.println("_ _ _ _ _ _ _");
 		}
@@ -100,15 +100,27 @@ public class Network {
 	 	*/
 		
 		//J is where it comes from, I is where its going to
-		System.out.println(w.length);
-		for (int l = nd.length - 1; l >= 0;l--) { //starting point in W array
-			for(int i = 0; i < nd[l].matrix.length; i++) {
-				for (int j = 0; j < nd[l].matrix[0].length; j++){
-					System.out.println("Running " + l +" : " + i + " : " + j);
-					nd[l].matrix[i][j] *= sigmoid(n[l].matrix[0][i]) * ( 1 - sigmoid(n[l].matrix[0][i])) * n[l + 1].matrix[0][j];
+		//System.out.println(w.length);
+		
+		for(int l = nd.length-1; l > 0; l--) {
+			nd[l].printMatrix();
+			System.out.println(l);
+			for(int i = 0; i < nd[l].matrix[0].length;i++) {
+				if (l == nd.length - 1) {	
+						nd[l].matrix[0][i] = (n[l].matrix[0][i] * ( 1 - n[l].matrix[0][i])) * (n[l].matrix[0][i] - tOutput[0].matrix[0][i]);
 				}
+				else {
+					for (int j = 0; j < nd[l+1].matrix[0].length; j++) {
+						nd[l].matrix[0][i] = w[l-1].matrix[i][j] * nd[l+1].matrix[0][j];
+					}
+				}
+				
 			}
+			nd[l].printMatrix();
 		}
+		//calculating derivative for each node 
+		
+		//todo: make program for getting W derivative through using nd derivatives
 
 		
 		//System.out.println("Error of " + tError[0].getMatrix() + " and squared " + tError[0].square().getMatrix(););
