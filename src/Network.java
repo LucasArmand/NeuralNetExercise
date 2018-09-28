@@ -1,8 +1,10 @@
 
 public class Network {
+	
 	public static double sigmoid(double a) {
 		return(1.0 / (1 + Math.pow(Math.E,-1 * a)));
 	}
+	
 	public static Matrix[] startW(int input ,int hidden,int output,int layers, Matrix[] m, boolean pop) {
 		m[0] = new Matrix(input + 1,hidden);
 		m[layers-2] = new Matrix(hidden + 1,output);
@@ -14,6 +16,7 @@ public class Network {
 		}
 		return m;
 	}
+	
 	public static Matrix[] startN(int input ,int hidden,int output,int layers, Matrix[] n) {
 		n[0] = new Matrix(1,input);
 		n[layers-1] = new Matrix(1,output);
@@ -26,32 +29,26 @@ public class Network {
 		}
 		return n;
 	}
+	
 	public static void main(String[] args) {
 
 		//length of Matrix of each section
-		int input = 3;
-		int hidden = 4;
-		int output = 3;
+		int input = 2;
+		int hidden = 2;
+		int output = 1;
 		
-		int layers = 4;
+		double learningRate = 0.05;
+		
+		int layers = 3;
 		
 		//input data fields
-		double[][] tInputData = {{1,0,2},{2,1,2},{1,1,2}};
-		double[][] tOutputData = {{1,0,0},{1,0.5,0},{1,0,1}};
-		
-		Matrix[] tError = new Matrix[tOutputData.length];
-		Matrix[] tInput = new Matrix[tInputData.length];
-		Matrix[] tOutput = new Matrix[tOutputData.length];
-		
-		//making array of matrices of input  data
-		for(int i = 0; i < tInput.length; i++) {
-			tInput[i] = new Matrix(tInputData[i]);
-			tOutput[i] = new Matrix(tOutputData[i]);
-			tError[i] = new Matrix(1,output);
-			//tInput[i].printMatrix();
-			//tOutput[i].printMatrix();
-		}
-		
+		double[][] tInputData = {{1,0},{0,1},{1,1},{0,0}};
+		double[][] tOutputData = {{.95},{.95},{.05},{.05}};
+		//System.out.println("before");
+		Matrix tError = new Matrix(0,tOutputData.length);
+		Matrix tInput = new Matrix(0,tInputData.length);
+		Matrix tOutput = new Matrix(0,tOutputData.length);
+		//System.out.println("after");
 		
 		Matrix[] n = new Matrix[layers];
 		Matrix[] nd = new Matrix[layers];
@@ -65,66 +62,152 @@ public class Network {
 		 * a2|a2b0 a2b1 a2b2
 		 * etc..
 		 */
+		
+		tInput.printMatrix();
 		n = startN(input,hidden,output,layers,n);
 		w = startW(input,hidden,output,layers,w,true);
 		dw = startW(input,hidden,output,layers,dw,false);
 		nd = startN(input,hidden,output,layers,nd);
-		
-
-		n[0] = tInput[0];
-		n[0].addBias(1);
-		for(int i = 0; i < layers-1; i++) {
-			n[i+1] = n[i].dot(w[i]);
-			
-			n[i+1].sigmoid();
-			n[i+1].addBias(1);
-			n[i].printMatrix();
-			System.out.println("____"+i+"___");
-			w[i].printMatrix();
-			System.out.println("_ _ _ _ _ _ _");
-		}
-		n[layers-1] = n[layers-2].dot(w[layers-2]);
-		n[layers-1].sigmoid();
-		n[layers-1].printMatrix();
-		tOutput[0].printMatrix();
-		tError[0] = tOutput[0].sub(n[layers-1]);
-		
-		for (Matrix d:dw) {
-			d.fill(1);
-		}
-		/*
-		for (Matrix i:w) {
-			i.printMatrix();
-			System.out.println("////????////????");
-		}
-	 	*/
-		
-		//J is where it comes from, I is where its going to
-		//System.out.println(w.length);
-		
-		for(int l = nd.length-1; l > 0; l--) {
-			nd[l].printMatrix();
-			System.out.println(l);
-			for(int i = 0; i < nd[l].matrix[0].length;i++) {
-				if (l == nd.length - 1) {	
-						nd[l].matrix[0][i] = (n[l].matrix[0][i] * ( 1 - n[l].matrix[0][i])) * (n[l].matrix[0][i] - tOutput[0].matrix[0][i]);
+		//System.out.println("after");
+		int loops = 500;
+		tInput.printMatrix();
+		//System.out.print(tInput.getMatrix());
+		int tLen = tInputData.length;
+		//System.out.println("after");
+		for (int p = 0; p < loops; p++) {
+			dw = new Matrix[layers-1];
+			dw = startW(input,hidden,output,layers,dw,false);
+			for(int z = 0; z < tLen; z++) {
+				tInput = new Matrix(tInputData[z]);
+				tOutput = new Matrix(tOutputData[z]);
+				tError = new Matrix(1,output);
+	
+				n = new Matrix[layers];
+				nd = new Matrix[layers];
+				n = startN(input,hidden,output,layers,n);
+				
+				nd = startN(input,hidden,output,layers,nd);
+				n[0].printMatrix();
+				n[0] = tInput;
+				n[0].printMatrix();
+				n[0].addBias(1);
+				//System.out.println("hi");
+				n[0].printMatrix();
+				for(int i = 0; i < layers-1; i++) {
+					n[i+1] = n[i].dot(w[i]);
+					
+					n[i+1].sigmoid();
+					n[i+1].addBias(1);
+					//System.out.println("hiInside");
+					n[i].printMatrix();
+					System.out.println("____"+i+"___");
+					w[i].printMatrix();
+					System.out.println("_ _ _ _ _ _ _");
 				}
-				else {
-					for (int j = 0; j < nd[l+1].matrix[0].length; j++) {
-						nd[l].matrix[0][i] = w[l-1].matrix[i][j] * nd[l+1].matrix[0][j];
+				n[layers-1] = n[layers-2].dot(w[layers-2]);
+				n[layers-1].sigmoid();
+				System.out.print("The answer for " + tInput.getMatrix() + " is ");
+				n[layers-1].printMatrix();
+				tOutput.printMatrix();
+				tError = tOutput.sub(n[layers-1]);
+				
+				/*
+				for (Matrix i:w) {
+					i.printMatrix();
+					System.out.println("////????////????");
+				}
+			 	*/
+				
+				//J is where it comes from, I is where its going to
+				//System.out.println(w.length);
+				
+				for(int l = nd.length-1; l > 0; l--) {
+					//nd[l].printMatrix();
+					//System.out.println(l);
+					for(int i = 0; i < nd[l].matrix[0].length;i++) {
+						if (l == nd.length - 1) {	
+								nd[l].matrix[0][i] = (n[l].matrix[0][i] * ( 1 - n[l].matrix[0][i])) * (n[l].matrix[0][i] - tOutput.matrix[0][i]);
+						}
+						else {
+							for (int j = 0; j < nd[l+1].matrix[0].length; j++) {
+								nd[l].matrix[0][i] += w[l-1].matrix[i][j] * nd[l+1].matrix[0][j];
+							}
+						}
+						
+					}
+					//nd[l].printMatrix();
+				}
+				for(int l = nd.length-1; l > 0; l--) {
+					for(int i = 0; i < nd[l].matrix[0].length;i++) {
+						nd[l].matrix[0][i] *= n[l].matrix[0][i] * (1 - n[l].matrix[0][i]);
 					}
 				}
 				
+				for (int l = 0; l < w.length; l++) {
+					for (int i = 0; i < w[l].matrix.length; i++) {
+						for(int j = 0; j < w[l].matrix[0].length; j++) {
+							dw[l].matrix[i][j] += nd[l+1].matrix[0][j] * n[l].matrix[0][i];
+							//System.out.print(dw[l].matrix[i][j] + " : ");
+							//w[l].matrix[i][j] -= dw[l].matrix[i][j] * learningRate;
+						}
+					}
+				}
+				dw[0].printMatrix();
+				//calculating derivative for each node 
 			}
-			nd[l].printMatrix();
+			//todo: make program for getting W derivative through using nd derivatives
+			
+			for (int l = 0; l < w.length; l++) {
+				for (int i = 0; i < w[l].matrix.length; i++) {
+					for(int j = 0; j < w[l].matrix[0].length; j++) {
+						w[l].matrix[i][j] -= dw[l].matrix[i][j] * learningRate;
+					}
+				}
+				//dw[l].printMatrix();
+			}
+			
 		}
-		//calculating derivative for each node 
-		
-		//todo: make program for getting W derivative through using nd derivatives
-
-		
 		//System.out.println("Error of " + tError[0].getMatrix() + " and squared " + tError[0].square().getMatrix(););
 		
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
