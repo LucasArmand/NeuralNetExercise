@@ -34,16 +34,16 @@ public class Network {
 
 		//length of Matrix of each section
 		int input = 2;
-		int hidden = 4;
+		int hidden = 2;
 		int output = 1;
 		
-		double learningRate = 0.05;
+		double learningRate = 1;
 		
-		int layers = 4;
+		int layers = 3;
 		
 		//input data fields
 		double[][] tInputData = {{1,0},{0,1},{1,1},{0,0}};
-		double[][] tOutputData = {{.95},{.95},{.05},{.05}};
+		double[][] tOutputData = {{1},{1},{0},{0}};
 		//System.out.println("before");
 		Matrix tError = new Matrix(0,tOutputData.length);
 		Matrix tInput = new Matrix(0,tInputData.length);
@@ -69,7 +69,7 @@ public class Network {
 		dw = startW(input,hidden,output,layers,dw,false);
 		nd = startN(input,hidden,output,layers,nd);
 		//System.out.println("after");
-		int loops = 500;
+		int loops = 1000;
 		tInput.printMatrix();
 		//System.out.print(tInput.getMatrix());
 		int tLen = tInputData.length;
@@ -78,8 +78,8 @@ public class Network {
 			dw = new Matrix[layers-1];
 			dw = startW(input,hidden,output,layers,dw,false);
 			for(int z = 0; z < tLen; z++) {
-				tInput = new Matrix(tInputData[2]);
-				tOutput = new Matrix(tOutputData[2]);
+				tInput = new Matrix(tInputData[z]);
+				tOutput = new Matrix(tOutputData[z]);
 				tError = new Matrix(1,output);
 	
 				n = new Matrix[layers];
@@ -126,30 +126,31 @@ public class Network {
 					//System.out.println(l);
 					for(int i = 0; i < nd[l].matrix[0].length;i++) {
 						if (l == nd.length - 1) {	
+							
 							nd[l].matrix[0][i] = (n[l].matrix[0][i] * ( 1 - n[l].matrix[0][i])) * (n[l].matrix[0][i] - tOutput.matrix[0][i]);
 						}
 						else if(l == nd.length - 2){
 							for (int j = 0; j < nd[l+1].matrix[0].length; j++) {
-								//nd[l+1].printMatrix();
+								
 								//System.out.println("T " + w[l-1].matrix[j][i]);
-								nd[l].matrix[0][i] += w[l-1].matrix[j][i] * nd[l+1].matrix[0][j];
+								nd[l+1].printMatrix();
+								System.out.println(l + " " + i + " " + j + " " + w[l].matrix[i][j]);
+								nd[l].matrix[0][i] += w[l].matrix[i][j] * nd[l+1].matrix[0][j];
 							}
+							System.out.println("Here it is before " + nd[l].matrix[0][i]);
+							nd[l].matrix[0][i] = nd[l].matrix[0][i] * (n[l].matrix[0][i] * (1 - n[l].matrix[0][i])); //sig
+							System.out.println("Here it is " + nd[l].matrix[0][i]);
 						}else {
 							for (int j = 0; j < nd[l+1].matrix[0].length - 1; j++) {
 								nd[l+1].printMatrix();
-								System.out.println("T " + w[l-1].matrix[j][i]);
+								System.out.println(l + " " + i + " " + j + " " + w[l-1].matrix[j][i]);
 								nd[l].matrix[0][i] += w[l-1].matrix[j][i] * nd[l+1].matrix[0][j];
 							}
-						
+							nd[l].matrix[0][i] *= (n[l].matrix[0][i] * (1 - n[l].matrix[0][i])); //sig
 						}
 						
 					}
 					//nd[l].printMatrix();
-				}
-				for(int l = nd.length-1; l > 0; l--) {
-					for(int i = 0; i < nd[l].matrix[0].length;i++) {
-						nd[l].matrix[0][i] *= n[l].matrix[0][i] * (1 - n[l].matrix[0][i]);
-					}
 				}
 				
 				for (int l = 0; l < w.length; l++) {
@@ -169,7 +170,7 @@ public class Network {
 				for (int l = 0; l < w.length; l++) {
 					for (int i = 0; i < w[l].matrix.length; i++) {
 						for(int j = 0; j < w[l].matrix[0].length; j++) {
-							w[l].matrix[i][j] -= dw[l].matrix[i][j] * learningRate;
+							//w[l].matrix[i][j] -= dw[l].matrix[i][j] * learningRate;
 						}
 					}
 					//dw[l].printMatrix();
@@ -177,7 +178,7 @@ public class Network {
 				//calculating derivative for each node 
 			}
 			//todo: make program for getting W derivative through using nd derivatives
-			/*
+			
 			for (int l = 0; l < w.length; l++) {
 				for (int i = 0; i < w[l].matrix.length; i++) {
 					for(int j = 0; j < w[l].matrix[0].length; j++) {
@@ -188,7 +189,7 @@ public class Network {
 			}
 			
 		
-		*/
+		
 		}
 		//System.out.println("Error of " + tError[0].getMatrix() + " and squared " + tError[0].square().getMatrix(););
 		
