@@ -32,16 +32,16 @@ public class Network {
 
 		//length of Matrix of each section
 		int input = 2;
-		int hidden = 2;
+		int hidden = 50;
 		int output = 1;
 		
 		double learningRate = 1;
 		
-		int layers = 3;
+		int layers = 10;
 		
 		//input data fields
-		double[][] tInputData = {{1,0},{0,1},{1,1},{0,0}};
-		double[][] tOutputData = {{1},{1},{0},{0}};
+		double[][] tInputData = {{5,2},{1,1},{1,2},{2,1},{0,0}};
+		double[][] tOutputData = {{1},{0.5},{0.75},{0.75},{0}};
 		Matrix tInput = new Matrix(0,tInputData.length);
 		Matrix tOutput = new Matrix(0,tOutputData.length);
 		
@@ -65,9 +65,12 @@ public class Network {
 		dw = startW(input,hidden,output,layers,dw,false);
 		nd = startN(input,hidden,output,layers,nd);
 		
-		int loops = 10000;
+		int loops = 1;
 		int tLen = tInputData.length;
-		
+		Parse parse = new Parse();
+		System.out.println("Hello");
+		int[] word = parse.parse("Hello");
+		parse.print(word);
 		for (int p = 0; p < loops; p++) {
 			
 			dw = new Matrix[layers-1];
@@ -97,21 +100,18 @@ public class Network {
 				System.out.println("Expected: " + tOutput.getMatrix());
 
 				for(int l = nd.length-1; l > 0; l--) {
+					//nd[l-1].printMatrix();
 					for(int i = 0; i < nd[l].matrix[0].length;i++) { //problem with longer hidden values are in this block
 						if (l == nd.length - 1) {	
 							nd[l].matrix[0][i] = (n[l].matrix[0][i] * ( 1 - n[l].matrix[0][i])) * (n[l].matrix[0][i] - tOutput.matrix[0][i]);
 						}
-						else if(l == nd.length - 2){
+						else {
 							for (int j = 0; j < nd[l+1].matrix[0].length; j++) {
+								//System.out.println(l + " " + i + " " + j + " " + w[l].matrix[i][j]);
 								nd[l].matrix[0][i] += w[l].matrix[i][j] * nd[l+1].matrix[0][j];
 							}
 							nd[l].matrix[0][i] = nd[l].matrix[0][i] * (n[l].matrix[0][i] * (1 - n[l].matrix[0][i])); //sig
-						}else {
-							for (int j = 0; j < nd[l+1].matrix[0].length - 1; j++) {
-								nd[l].matrix[0][i] += w[l-1].matrix[j][i] * nd[l+1].matrix[0][j];
-							}
-							nd[l].matrix[0][i] *= (n[l].matrix[0][i] * (1 - n[l].matrix[0][i])); //sig
-						}			
+						}		
 					}
 				}
 				//finding the derivative of the weights based off of the node derivatives
@@ -131,8 +131,8 @@ public class Network {
 					}
 				}
 			}
-			w[0].printMatrix();
-			w[1].printMatrix();
+			//w[0].printMatrix();
+			//w[1].printMatrix();
 		}
 		
 	}
