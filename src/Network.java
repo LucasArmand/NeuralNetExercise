@@ -1,6 +1,11 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class Network {
-	
+
 	public static double sigmoid(double a) {
 		return(1.0 / (1 + Math.pow(Math.E,-1 * a)));
 	}
@@ -28,20 +33,78 @@ public class Network {
 		return n;
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
+		
+		File english = new File("english.txt");
+		File italian = new File("italian.txt");
+		FileReader englishFile = new FileReader(english);
+		FileReader italianFile = new FileReader(italian);
+		BufferedReader englishReader = new BufferedReader(englishFile);
+		BufferedReader italianReader = new BufferedReader(italianFile);
+		StringBuffer englishBuffer = new StringBuffer();
+		StringBuffer italianBuffer = new StringBuffer();
+		
+		String line;
+		
+
+		while ((line = englishReader.readLine()) != null) {
+			englishBuffer.append(line);
+			englishBuffer.append("\n");
+		}
+		englishReader.close();
+		while ((line = italianReader.readLine()) != null) {
+			italianBuffer.append(line);
+			italianBuffer.append("\n");
+		}
+		italianReader.close();
+		System.out.println("Contents of file:");
+		System.out.println(italianBuffer.toString());
+		System.out.println(englishBuffer.toString());
+		
+		String[] englishWords = englishBuffer.toString().split("\n");
+		String[] italianWords = italianBuffer.toString().split("\n");
+		
+		double[][] englishNums = new double[englishWords.length][5];
+		double[][] italianNums = new double[italianWords.length][5];
+		
+		Parse parse = new Parse();
+		
+		for(int i = 0; i < englishWords.length; i++) {
+			englishNums[i] = parse.parse(englishWords[i]);
+		}
+		for(int i = 0; i < italianWords.length; i++) {
+			italianNums[i] = parse.parse(italianWords[i]);
+		}
+		parse.print(englishNums[0]);
+		parse.print(italianNums[0]);
+		
+		
+		
 		//length of Matrix of each section
-		int input = 2;
-		int hidden = 50;
+		int input = 5;
+		int hidden = 25;
 		int output = 1;
 		
-		double learningRate = 1;
+		double[][] combinedDictionary = new double[englishNums.length + italianNums.length][5];
+		double[][] langResult = new double[englishNums.length + italianNums.length][1];
+		for(int i = 0; i < combinedDictionary.length; i++) {
+			if (i < englishNums.length) {
+				combinedDictionary[i] = englishNums[i];
+				langResult[i][0] = 1;
+			}else {
+				combinedDictionary[i] = italianNums[i-englishNums.length];
+				langResult[i][0] = 0;
+			}
+		}
+
+		double learningRate = 0.25;
 		
 		int layers = 10;
 		
 		//input data fields
-		double[][] tInputData = {{5,2},{1,1},{1,2},{2,1},{0,0}};
-		double[][] tOutputData = {{1},{0.5},{0.75},{0.75},{0}};
+		double[][] tInputData = combinedDictionary;
+		double[][] tOutputData = langResult;
 		Matrix tInput = new Matrix(0,tInputData.length);
 		Matrix tOutput = new Matrix(0,tOutputData.length);
 		
@@ -65,12 +128,9 @@ public class Network {
 		dw = startW(input,hidden,output,layers,dw,false);
 		nd = startN(input,hidden,output,layers,nd);
 		
-		int loops = 1;
+		int loops = 10000;
 		int tLen = tInputData.length;
-		Parse parse = new Parse();
-		System.out.println("Hello");
-		int[] word = parse.parse("Hello");
-		parse.print(word);
+		
 		for (int p = 0; p < loops; p++) {
 			
 			dw = new Matrix[layers-1];
@@ -134,6 +194,27 @@ public class Network {
 			//w[0].printMatrix();
 			//w[1].printMatrix();
 		}
+		
+		//running tests
+		tInput.matrix[0] = parse.parse("ours ");
+		n = new Matrix[layers];
+		nd = new Matrix[layers];
+		n = startN(input,hidden,output,layers,n);
+		nd = startN(input,hidden,output,layers,nd);
+		n[0] = tInput;
+		n[0].addBias(1);
+		for(int i = 0; i < layers-1; i++) {
+			n[i+1] = n[i].dot(w[i]);
+			n[i+1].sigmoid();
+			n[i+1].addBias(1);
+		}
+		n[layers-1] = n[layers-2].dot(w[layers-2]);
+		n[layers-1].sigmoid();
+		//end forward pass
+		
+		System.out.print("The answer for " + tInput.getMatrix() + "is " + n[layers-1].getMatrix());
+		System.out.println("Expected: " + tOutput.getMatrix());
+		
 		
 	}
 	
