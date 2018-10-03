@@ -1,20 +1,24 @@
 
 public class Parse {
-	private final char[] ALPHA = {' ','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+	private final char[] ALPHA = {' ','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','à','è','ò','ù','\'',};
 	
-	public double[] parse(String in) {
+	public double[] parse(String in,int maxLen) {
 		in = in.toLowerCase();
-		double[] out = new double[in.length()];
+		double[] out = new double[maxLen];
 		
-		for (int c = 0; c < in.length(); c++) {
-			out[c] = 0;
-			for(int i = 0; i < ALPHA.length; i++) {
-				
-				//System.out.print(ALPHA[i] + " " + in.charAt(c));
-				if (ALPHA[i] == in.charAt(c)) {
-					out[c] = i;
+		for (int c = 0; c < maxLen; c++) {
+			if(c >= in.length()) {
+				out[c] = 0;
+			}else {
+				for(int i = 0; i < ALPHA.length; i++) {
+					
+					//System.out.print(ALPHA[i] + " " + in.charAt(c));
+					if (ALPHA[i] == in.charAt(c)) {
+						out[c] = i;
+					}
 				}
 			}
+			
 		}
 		return out;
 	}

@@ -65,16 +65,16 @@ public class Network {
 		String[] englishWords = englishBuffer.toString().split("\n");
 		String[] italianWords = italianBuffer.toString().split("\n");
 		
-		double[][] englishNums = new double[englishWords.length][5];
-		double[][] italianNums = new double[italianWords.length][5];
+		double[][] englishNums = new double[englishWords.length][15];
+		double[][] italianNums = new double[italianWords.length][15];
 		
 		Parse parse = new Parse();
 		
 		for(int i = 0; i < englishWords.length; i++) {
-			englishNums[i] = parse.parse(englishWords[i]);
+			englishNums[i] = parse.parse(englishWords[i],15);
 		}
 		for(int i = 0; i < italianWords.length; i++) {
-			italianNums[i] = parse.parse(italianWords[i]);
+			italianNums[i] = parse.parse(italianWords[i],15);
 		}
 		parse.print(englishNums[0]);
 		parse.print(italianNums[0]);
@@ -82,7 +82,7 @@ public class Network {
 		
 		
 		//length of Matrix of each section
-		int input = 5;
+		int input = 15;
 		int hidden = 25;
 		int output = 1;
 		
@@ -98,7 +98,7 @@ public class Network {
 			}
 		}
 
-		double learningRate = 0.25;
+		double learningRate = 0.05;
 		
 		int layers = 10;
 		
@@ -128,7 +128,7 @@ public class Network {
 		dw = startW(input,hidden,output,layers,dw,false);
 		nd = startN(input,hidden,output,layers,nd);
 		
-		int loops = 10000;
+		int loops = 1000;
 		int tLen = tInputData.length;
 		
 		for (int p = 0; p < loops; p++) {
@@ -156,8 +156,8 @@ public class Network {
 				n[layers-1].sigmoid();
 				//end forward pass
 				
-				System.out.print("The answer for " + tInput.getMatrix() + "is " + n[layers-1].getMatrix());
-				System.out.println("Expected: " + tOutput.getMatrix());
+				//System.out.print("The answer for " + tInput.getMatrix() + "is " + n[layers-1].getMatrix());
+				//System.out.println("Expected: " + tOutput.getMatrix());
 
 				for(int l = nd.length-1; l > 0; l--) {
 					//nd[l-1].printMatrix();
@@ -196,7 +196,7 @@ public class Network {
 		}
 		
 		//running tests
-		tInput.matrix[0] = parse.parse("ours ");
+		tInput.matrix[0] = parse.parse("ciao",15);
 		n = new Matrix[layers];
 		nd = new Matrix[layers];
 		n = startN(input,hidden,output,layers,n);
