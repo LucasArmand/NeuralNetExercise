@@ -27,6 +27,18 @@ public class Matrix {
 		return (output + "]\n");
 	}
 	
+	public String toString() {
+		String out = "<html>";
+		for (double[] x:matrix) {
+			out += ("[ ");
+		for(double y:x){
+			out += (y + " ");
+		}
+		out += ("]<br/>");
+		}
+		return out + "</html>";
+	}
+	
 	public void printMatrix() {
 		for (double[] x:matrix) {
 			System.out.print("[ ");
@@ -131,6 +143,17 @@ public class Matrix {
 			return new Matrix(0,0);
 		}
 	}
+	
+	public double average() {
+		double sum = 0;
+		for (int i = 0; i < matrix.length; i++) {
+			for (int j = 0; j < matrix[0].length; j++) {
+				sum += matrix[i][j];
+			}
+		}
+		return sum / (matrix.length * matrix[0].length);
+	}
+			
 	/*
 	 * [vertical down][horizontal right]
 	 * [-y][x]

@@ -3,7 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-
+import java.util.Scanner;
 public class Network {
 
 	public static double sigmoid(double a) {
@@ -33,86 +33,52 @@ public class Network {
 		return n;
 	}
 	
-	public static void main(String[] args) throws IOException {
-
-		
-		File english = new File("english.txt");
-		File italian = new File("italian.txt");
-		FileReader englishFile = new FileReader(english);
-		FileReader italianFile = new FileReader(italian);
-		BufferedReader englishReader = new BufferedReader(englishFile);
-		BufferedReader italianReader = new BufferedReader(italianFile);
-		StringBuffer englishBuffer = new StringBuffer();
-		StringBuffer italianBuffer = new StringBuffer();
-		
-		String line;
-		
-
-		while ((line = englishReader.readLine()) != null) {
-			englishBuffer.append(line);
-			englishBuffer.append("\n");
-		}
-		englishReader.close();
-		while ((line = italianReader.readLine()) != null) {
-			italianBuffer.append(line);
-			italianBuffer.append("\n");
-		}
-		italianReader.close();
-		System.out.println("Contents of file:");
-		System.out.println(italianBuffer.toString());
-		System.out.println(englishBuffer.toString());
-		
-		String[] englishWords = englishBuffer.toString().split("\n");
-		String[] italianWords = italianBuffer.toString().split("\n");
-		
-		double[][] englishNums = new double[englishWords.length][15];
-		double[][] italianNums = new double[italianWords.length][15];
-		
-		Parse parse = new Parse();
-		
-		for(int i = 0; i < englishWords.length; i++) {
-			englishNums[i] = parse.parse(englishWords[i],15);
-		}
-		for(int i = 0; i < italianWords.length; i++) {
-			italianNums[i] = parse.parse(italianWords[i],15);
-		}
-		parse.print(englishNums[0]);
-		parse.print(italianNums[0]);
-		
-		
-		
+	int input;
+	int hidden;
+	int output;
+	int layers;
+	int loops;
+	
+	double learningRate;
+	double[][] tInputData;
+	double[][] tOutputData;
+	double[][] avgErr;
+	
+	Matrix tInput;
+	Matrix tOutput;
+	Matrix[] n;
+	Matrix[] nd;
+	Matrix[] w;
+	Matrix[] dw;
+	
+	/**
+	 * create a new neural network
+	 * @param inp number of inputs
+	 * @param hid number of nodes per hidden layer
+	 * @param out number of outputs
+	 * @param lay number of total layers (must be >= 3)
+	 * @param tI input dataset
+	 * @param tO expected output dataset
+	 */
+	public Network(int inp,int hid, int out, int lay, double[][] tI, double[][] tO) {
 		//length of Matrix of each section
-		int input = 15;
-		int hidden = 25;
-		int output = 1;
-		
-		double[][] combinedDictionary = new double[englishNums.length + italianNums.length][5];
-		double[][] langResult = new double[englishNums.length + italianNums.length][1];
-		for(int i = 0; i < combinedDictionary.length; i++) {
-			if (i < englishNums.length) {
-				combinedDictionary[i] = englishNums[i];
-				langResult[i][0] = 1;
-			}else {
-				combinedDictionary[i] = italianNums[i-englishNums.length];
-				langResult[i][0] = 0;
-			}
-		}
+		input = inp;
+		hidden = hid;
+		output = out;
 
-		double learningRate = 0.05;
-		
-		int layers = 10;
+
+		layers = lay;
 		
 		//input data fields
-		double[][] tInputData = combinedDictionary;
-		double[][] tOutputData = langResult;
-		Matrix tInput = new Matrix(0,tInputData.length);
-		Matrix tOutput = new Matrix(0,tOutputData.length);
+		tInputData = tI;
+		tOutputData  = tO;
+		tInput = new Matrix(0,tInputData.length);
+		tOutput = new Matrix(0,tOutputData.length);
 		
-		
-		Matrix[] n = new Matrix[layers];
-		Matrix[] nd = new Matrix[layers];
-		Matrix[] w = new Matrix[layers-1];
-		Matrix[] dw = new Matrix[layers-1];
+		n = new Matrix[layers];
+		nd = new Matrix[layers];
+		w = new Matrix[layers-1];
+		dw = new Matrix[layers-1];
 		
 		/*   |b0  b1  b1
 		 * _____________
@@ -121,15 +87,19 @@ public class Network {
 		 * a2|a2b0 a2b1 a2b2
 		 * etc..
 		 */
-		
-		tInput.printMatrix();
+
 		n = startN(input,hidden,output,layers,n);
 		w = startW(input,hidden,output,layers,w,true);
 		dw = startW(input,hidden,output,layers,dw,false);
 		nd = startN(input,hidden,output,layers,nd);
 		
-		int loops = 1000;
+	}
+	public void train(int lps, double lr) {
+		loops = lps;
+		learningRate = lr;
 		int tLen = tInputData.length;
+		avgErr = new double[tInputData.length][output];
+		
 		
 		for (int p = 0; p < loops; p++) {
 			
@@ -137,16 +107,20 @@ public class Network {
 			dw = startW(input,hidden,output,layers,dw,false);
 			
 			for(int z = 0; z < tLen; z++) {
+				
 				tInput = new Matrix(tInputData[z]);
 				tOutput = new Matrix(tOutputData[z]);
 				
 				//start forward pass
 				n = new Matrix[layers];
 				nd = new Matrix[layers];
+				
 				n = startN(input,hidden,output,layers,n);
 				nd = startN(input,hidden,output,layers,nd);
+				
 				n[0] = tInput;
 				n[0].addBias(1);
+				
 				for(int i = 0; i < layers-1; i++) {
 					n[i+1] = n[i].dot(w[i]);
 					n[i+1].sigmoid();
@@ -154,7 +128,13 @@ public class Network {
 				}
 				n[layers-1] = n[layers-2].dot(w[layers-2]);
 				n[layers-1].sigmoid();
+				
 				//end forward pass
+				
+				for(int x = 0; x < output; x++) {
+					//System.out.println("Getting average for " + z + ", " + x);
+					avgErr[z][x] = Math.pow(tOutputData[z][x] - n[layers-1].matrix[0][x], 2);
+				}
 				
 				//System.out.print("The answer for " + tInput.getMatrix() + "is " + n[layers-1].getMatrix());
 				//System.out.println("Expected: " + tOutput.getMatrix());
@@ -193,10 +173,19 @@ public class Network {
 			}
 			//w[0].printMatrix();
 			//w[1].printMatrix();
+			double sum = 0;
+			for (int i = 0; i < avgErr.length; i++) {
+				for (int j = 0; j < avgErr[0].length; j++) {
+					sum += avgErr[i][j];
+				}
+			}
+			System.out.println("Average squared error for loop " + p + ": " + sum / (avgErr.length * avgErr[0].length));
 		}
+
 		
-		//running tests
-		tInput.matrix[0] = parse.parse("ciao",15);
+	}
+	public double[] run(double[] inp) {
+		tInput.matrix[0] = inp;
 		n = new Matrix[layers];
 		nd = new Matrix[layers];
 		n = startN(input,hidden,output,layers,n);
@@ -210,12 +199,7 @@ public class Network {
 		}
 		n[layers-1] = n[layers-2].dot(w[layers-2]);
 		n[layers-1].sigmoid();
-		//end forward pass
-		
-		System.out.print("The answer for " + tInput.getMatrix() + "is " + n[layers-1].getMatrix());
-		System.out.println("Expected: " + tOutput.getMatrix());
-		
-		
+		return(n[layers-1].matrix[0]);
 	}
 	
 
