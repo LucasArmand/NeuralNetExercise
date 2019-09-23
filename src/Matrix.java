@@ -1,55 +1,61 @@
 import java.util.Random;
 
-public class Matrix {
+public class Matrix { //a special Matrix class, that holds a 2-D array of doubles, allows for many different methods
 	public double[][] matrix;
-	Matrix(int rows, int columns) {
+ 
+	Matrix(int rows, int columns) {//new matrix with rows rows and columns columns
 		matrix = new double[rows][columns];
 	}
-	Matrix(double[] data) {
+	Matrix(double[] data) { //new matrix based off of 1-D double array
 		matrix = new double[1][data.length];
 		for(int i = 0; i < data.length; i++) {
 			matrix[0][i] = data[i];
 		}
 	}
-	
-	Matrix (Matrix m) {
+	Matrix (double[][] m){ //new matrix based off of 2-D double array
+		matrix = m;
+	}
+	Matrix (Matrix m) { //constructs the matrix based on another matrix's dimensions
 		matrix = new double[m.matrix.length][m.matrix[0].length];
 	}
+
 	
-	public String getMatrix() {
-		String output = "";
-		for (double[] x:matrix) {
-			output += "[ ";
-			for(double y:x){
-				output += y + " ";
-			}
-		}
-		return (output + "]\n");
-	}
-	
-	public String toString() {
-		String out = "<html>";
+	public String toString() { //gives the matrix as a string
+		String out = "";
 		for (double[] x:matrix) {
 			out += ("[ ");
 		for(double y:x){
-			out += (y + " ");
+			out += y + ", ";
 		}
-		out += ("]<br/>");
+		out += ("]\n");
 		}
-		return out + "</html>";
+		return out ;
 	}
 	
-	public void printMatrix() {
-		for (double[] x:matrix) {
-			System.out.print("[ ");
-		for(double y:x){
-			System.out.print(y + " ");
+	
+	public Matrix ReLU() { //applies the ReLU function to every value in this matrix (all negative values go to 0)
+		double[][] temp = matrix;
+		for (int i = 0; i < temp.length; i++) {
+			for (int j = 0; j < temp[0].length; j++) {
+				temp[i][j] = Math.max(temp[i][j], 0);
+			}
 		}
-		System.out.print("]\n");
-		}
+		return new Matrix(temp);
 	}
 	
-	public void addBias(double b) {
+	public double get(int x, int y) { //returns the value of this matrix at [x][y]
+		return matrix[x][y];
+	}
+	public void add(Matrix m) { //adds each element
+		if(m.matrix.length == matrix.length && m.matrix[0].length == matrix[0].length) {
+			for(int i = 0; i < matrix.length; i++) {
+				for(int j = 0; j < matrix[0].length;j++) {
+					matrix[i][j] += m.matrix[i][j];
+				}
+			}
+		}
+	}
+	public void addBias(double b) { //adds a new element to the matrix, the bias term
 		double[][] augmented = new double[1][matrix[0].length + 1];
 		for (int i = 0; i < matrix[0].length;i++) {
 			augmented[0][i] = matrix[0][i];
@@ -58,7 +64,7 @@ public class Matrix {
 		matrix = augmented;
 	}
 	
-	public Matrix square() {
+	public Matrix square() { //squares each term in this matrix
 		Matrix m = new Matrix(this);
 		for (int i = 0; i < m.matrix.length; i++) {
 			for (int j = 0; j < m.matrix[0].length; j++) {
@@ -68,7 +74,7 @@ public class Matrix {
 		return m;
 	}
 	
-	public void sigmoid() {
+	public void sigmoid() { //applies the sigmoid function to every element in this matrix
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix[0].length; j++) {
 				matrix[i][j] = (1.0 / (1 + Math.pow(Math.E,-1 * matrix[i][j])));
@@ -76,7 +82,7 @@ public class Matrix {
 		}
 	}
 	
-	public Matrix sub (Matrix b) {
+	public Matrix sub (Matrix b) { //subtracts each element from this matrix with each element in b
 		if (matrix.length == b.matrix.length && matrix[0].length == b.matrix[0].length) {
 			Matrix result = new Matrix(matrix.length,matrix[0].length);
 			for (int i = 0; i < matrix.length; i++) {
@@ -90,7 +96,7 @@ public class Matrix {
 		}
 	}
 	
-	public void add(double b) {
+	public void add(double b) { //adds b to every value in the matrix
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix[0].length; j++) {
 				matrix[i][j] += b;
@@ -98,22 +104,23 @@ public class Matrix {
 		}
 	}
 	
-	public void fill (double a){
+	public void fill (double a){ //fills the matrix with a
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix[0].length; j++) {
 				matrix[i][j] = a;
 			}
 		}
 	}
-	public void singleMult (double a){
+	public Matrix singleMult (double a){ //multiplies every element in the matrix by a scalar a
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix[0].length; j++) {
 				matrix[i][j] *= a;
 			}
 		}
+		return this;
 	}
 	
-	public void populate (){
+	public void populate (){ //fills the matrix with random values
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix[0].length; j++) {
 				matrix[i][j] = (double)(new Random().nextInt(201) - 100) / 100;
@@ -121,7 +128,7 @@ public class Matrix {
 		}
 	}
 	
-	public Matrix dot (Matrix other){
+	public Matrix dot (Matrix other){ //multiplies the two matrices together
 		double[][] b = other.matrix;
 		double[][] a = matrix;
 		if (a[0].length == b.length) {
@@ -144,7 +151,7 @@ public class Matrix {
 		}
 	}
 	
-	public double average() {
+	public double average() { //average value across the entire matrix
 		double sum = 0;
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix[0].length; j++) {
